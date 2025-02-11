@@ -14,7 +14,16 @@ exports.handler = async (event) => {
 
   try {
     console.log("Received request:", event.body);
+    
+    if (!event.body) {
+      throw new Error("Request body is empty");
+    }
+
     const requestBody = JSON.parse(event.body);
+
+    if (!requestBody.messages || !Array.isArray(requestBody.messages)) {
+      throw new Error("Invalid request format. 'messages' should be an array.");
+    }
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -47,7 +56,7 @@ exports.handler = async (event) => {
       body: JSON.stringify(data),
     };
   } catch (error) {
-    console.error("🚨 ERROR: API Fetch Failed:", error);
+    console.error("🚨 ERROR:", error.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Failed to fetch response", details: error.message }),
