@@ -1,7 +1,19 @@
 exports.handler = async (event) => {
-  const API_KEY = process.env.GROQ_API_KEY; // Secure API Key from Environment Variables
+  console.log("Function triggered");
+
+  const API_KEY = process.env.GROQ_API_KEY;
   const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+  if (!API_KEY) {
+    console.error("🚨 ERROR: API Key is missing in environment variables!");
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Server error: API Key is missing." }),
+    };
+  }
+
   try {
+    console.log("Received request:", event.body);
     const requestBody = JSON.parse(event.body);
 
     const response = await fetch(API_URL, {
@@ -19,15 +31,26 @@ exports.handler = async (event) => {
       }),
     });
 
+    if (!response.ok) {
+      console.error("🚨 API Call Failed! Status:", response.status, response.statusText);
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: "API request failed" }),
+      };
+    }
+
     const data = await response.json();
+    console.log("✅ API Response:", data);
+
     return {
       statusCode: 200,
       body: JSON.stringify(data),
     };
   } catch (error) {
+    console.error("🚨 ERROR: API Fetch Failed:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Failed to fetch response" }),
+      body: JSON.stringify({ error: "Failed to fetch response", details: error.message }),
     };
   }
 };
