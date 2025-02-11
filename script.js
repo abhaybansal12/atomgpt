@@ -1,4 +1,4 @@
-const API_ENDPOINT = "/.netlify/functions/chat"; // Netlify function endpoint
+const API_ENDPOINT = "https://atomgpt.netlify.app/.netlify/functions/chat";
 
 async function sendMessage() {
   const message = chatInput.value.trim();
@@ -8,29 +8,26 @@ async function sendMessage() {
   chatInput.value = "";
   chatInput.focus();
 
-  const typingIndicator = createTypingIndicator();
-  chatWindow.appendChild(typingIndicator);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+  const requestData = {
+    messages: [{ role: "user", content: message }]
+  };
 
   try {
+    console.log("🔹 Sending request to:", API_ENDPOINT);
+    console.log("📨 Request Data:", JSON.stringify(requestData));
+
     const response = await fetch(API_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [{ role: "user", content: message }],
-      }),
+      body: JSON.stringify(requestData),
     });
 
+    console.log("📩 Response received:", response);
+
     const data = await response.json();
-    if (typingIndicator.parentNode) {
-      chatWindow.removeChild(typingIndicator);
-    }
     appendMessage("bot", data.choices[0].message.content);
   } catch (error) {
-    console.error("Error:", error);
-    if (typingIndicator.parentNode) {
-      chatWindow.removeChild(typingIndicator);
-    }
+    console.error("🚨 API Request Failed:", error);
     appendMessage("bot", "Error fetching response. Please try again.");
   }
 }
